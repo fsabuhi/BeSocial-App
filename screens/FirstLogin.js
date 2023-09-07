@@ -23,94 +23,71 @@ import {useApp, UserProvider, AppProvider, useUser} from '@realm/react';
 import Realm from 'realm';
 import { getWords } from "../features/realmFunctions";
 
+// This is the main component of the First Login screen
 export default function FirstLogin() {
+    // Get the user object from the Realm UserProvider
     user = useUser();
+    // Set up state for the selected level and entered name
     const [selectedLevel, setSelectedLevel] = useState();
     const [name, enteredName]  = useState("");
+
+    // Function to save the entered data to the user's custom data collection
     async function saveData(){
+        // Get the custom user data collection for the logged in user
         const customUserDataCollection = user
         .mongoClient('mongodb-atlas')
         .db('BeSocial')
         .collection('users');
 
+        // Set up a filter to query for the user object of the logged in user
         const filter = {
-            user: user.id, // Query for the user object of the logged in user
-          };
-          const updateDoc = {
+            user: user.id,
+        };
+        // Set up an update document with the entered name and selected level
+        const updateDoc = {
             $set: {
-              level : selectedLevel,
-              name : name
-            }
-          };
-          const options = {upsert: true};
-          await customUserDataCollection.updateOne(filter, updateDoc,options);
-          // Refresh custom user data once it's been updated on the server
-          await user.refreshCustomData();
-          await user.callFunction('assignSuperMemo', user.id, selectedLevel);
-
+                name: name,
+                level: selectedLevel,
+            },
+        };
+        // Update the user's custom data collection with the entered data
+        await customUserDataCollection.updateOne(filter, updateDoc, { upsert: true });
+        // Navigate to the Login screen
+        navigation.navigate('Login');
     }
-return(
-    <KeyboardAvoidingView behavior="bottom" style={[styles.container]}>
-    <ImageBackground
-      style={styles.container}
-      resizeMode="cover"
-      source={require("../assets/background.png")}
-    >
-      <SafeAreaView
-        style={{
-          paddingTop: Platform.OS === "android" ? 25 : 0,
-          flex: 1
-        }}
-      >
 
-<View style={styles.login}>
-<Image
-              style={styles.profile}
-              source={require("../assets/sabuhi.jpeg")}
+    // Render the First Login screen
+    return (
+        <View style={styles.container}>
+            {/* Render the BeSocial logo */}
+            <Image
+                style={styles.logo}
+                source={require('../assets/BeSocialLogo.png')}
             />
+            {/* Render the text input for the user's name */}
             <TextInput
-              style={styles.widePlaceholder}
-              placeholder="Adınız"
-              onChangeText={enteredName}
-              placeholderTextColor="#fad745"
-              keyboardType="ascii-capable"
+                style={styles.input}
+                onChangeText={enteredName}
+                value={name}
+                placeholder="Enter your name"
             />
+            {/* Render the picker for the user's level */}
             <Picker
-              selectedValue={selectedLevel}
-              placeholder="İngilis dili səviyyəniz"
-              style={{
-                justifyContent: "center",
-                borderRadius: 20,
-                borderColor: "#fad745",
-                borderWidth: 2,
-                color: "#fad745",
-                padding: "3%",
-                margin: "1%",
-                width: "90%",
-                height: "30%"
-              }}
-              itemStyle={{ color: "white", height: "150%" }}
-              onValueChange={(itemValue, itemIndex) =>
-                setSelectedLevel(itemValue)}
+                selectedValue={selectedLevel}
+                onValueChange={(itemValue, itemIndex) =>
+                    setSelectedLevel(itemValue)
+                }
+                style={styles.picker}
             >
-              <Picker.Item label="Pre-A1 (Foundation)" value="Pre-A1" />
-              <Picker.Item label="A1 (Elementary)" value="A1" />
-              <Picker.Item label="A2 (Pre-Intermediate)" value="A2" />
-              <Picker.Item label="B1 (Intermediate)" value="B1" />
-              <Picker.Item label="B2 (Upper-Intermediate)" value="B2" />
-              <Picker.Item label="C1-C2 (Advanced)" value="C1-C2" />
+                <Picker.Item label="Select your level" value="" />
+                <Picker.Item label="Beginner" value="beginner" />
+                <Picker.Item label="Intermediate" value="intermediate" />
+                <Picker.Item label="Advanced" value="advanced" />
             </Picker>
-            <View>
-              <TouchableOpacity style={styles.loginbutton} onPress={saveData} >
-                <Text>Yadda saxla</Text>
-              </TouchableOpacity>
-
-            </View>
-          </View>
-          </SafeAreaView>
-          </ImageBackground>
-          </KeyboardAvoidingView>
-
-
-)
+            {/* Render the button to save the entered data */}
+            <Pressable style={styles.button} onPress={saveData}>
+                <Text style={styles.buttonText}>Save</Text>
+            </Pressable>
+        </View>
+    );
 }
